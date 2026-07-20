@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -15,7 +15,13 @@
             --tg-theme-button-text-color: #ffffff;
             --tg-theme-secondary-bg-color: #f0f0f0;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--tg-theme-bg-color);
@@ -24,26 +30,74 @@
             padding-bottom: 100px;
             min-height: 100vh;
         }
-        h1 { font-size: 22px; margin-bottom: 4px; text-align: center; }
-        .subtitle { color: var(--tg-theme-hint-color); font-size: 14px; text-align: center; margin-bottom: 20px; }
-        .step { display: none; animation: fadeIn 0.3s ease; }
-        .step.active { display: block; }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .step-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        .step-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .step-number {
             background: var(--tg-theme-button-color);
             color: var(--tg-theme-button-text-color);
-            width: 28px; height: 28px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 700; flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
         }
-        .btn-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-        .btn-group.horizontal { flex-direction: row; flex-wrap: wrap; }
-        .btn-group.horizontal .btn { flex: 1; min-width: calc(50% - 4px); }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .btn-group.horizontal {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .btn-group.horizontal .btn {
+            flex: 1;
+            min-width: calc(50% - 4px);
+        }
+
         .btn {
             background: var(--tg-theme-secondary-bg-color);
             border: 2px solid transparent;
@@ -56,12 +110,21 @@
             text-align: center;
             font-weight: 500;
         }
-        .btn:active { transform: scale(0.97); }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
         .btn.selected {
             border-color: var(--tg-theme-button-color);
             background: color-mix(in srgb, var(--tg-theme-button-color) 10%, var(--tg-theme-bg-color));
         }
-        .btn-warehouse { font-size: 14px; padding: 12px 10px; }
+
+        .btn-warehouse {
+            font-size: 14px;
+            padding: 12px 10px;
+        }
+
         .input-field {
             width: 100%;
             padding: 14px 16px;
@@ -74,39 +137,57 @@
             transition: border-color 0.2s;
             margin-bottom: 12px;
         }
-        .input-field:focus { border-color: var(--tg-theme-button-color); }
-        .input-field::placeholder { color: var(--tg-theme-hint-color); }
+
+        .input-field:focus {
+            border-color: var(--tg-theme-button-color);
+        }
+
+        .input-field::placeholder {
+            color: var(--tg-theme-hint-color);
+        }
+
         .calendar {
             background: var(--tg-theme-secondary-bg-color);
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 16px;
         }
+
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
         }
+
         .calendar-header button {
-            background: none; border: none;
-            font-size: 20px; cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
             color: var(--tg-theme-link-color);
             padding: 4px 12px;
         }
-        .calendar-header span { font-weight: 600; font-size: 16px; }
+
+        .calendar-header span {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 4px;
             text-align: center;
         }
+
         .calendar-grid .day-name {
             font-size: 12px;
             color: var(--tg-theme-hint-color);
             font-weight: 600;
             padding: 4px 0;
         }
+
         .calendar-grid .day {
             padding: 8px 4px;
             border-radius: 8px;
@@ -114,18 +195,37 @@
             cursor: pointer;
             transition: all 0.2s;
         }
+
         .calendar-grid .day:hover:not(.disabled):not(.empty) {
             background: color-mix(in srgb, var(--tg-theme-button-color) 20%, transparent);
         }
+
         .calendar-grid .day.selected {
             background: var(--tg-theme-button-color);
             color: var(--tg-theme-button-text-color);
             font-weight: 700;
         }
-        .calendar-grid .day.disabled { color: var(--tg-theme-hint-color); opacity: 0.4; cursor: default; }
-        .calendar-grid .day.empty { cursor: default; }
-        .calendar-grid .day.today { border: 2px solid var(--tg-theme-button-color); }
-        .nav-buttons { display: flex; gap: 8px; margin-top: 16px; }
+
+        .calendar-grid .day.disabled {
+            color: var(--tg-theme-hint-color);
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .calendar-grid .day.empty {
+            cursor: default;
+        }
+
+        .calendar-grid .day.today {
+            border: 2px solid var(--tg-theme-button-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
         .nav-btn {
             flex: 1;
             padding: 14px;
@@ -136,20 +236,55 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .nav-btn:active { transform: scale(0.97); }
-        .nav-btn.back { background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); }
-        .nav-btn.next { background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); }
-        .nav-btn:disabled { opacity: 0.5; cursor: default; }
-        .progress-bar { display: flex; gap: 4px; margin-bottom: 20px; }
-        .progress-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--tg-theme-secondary-bg-color); transition: background 0.3s; }
-        .progress-dot.done { background: var(--tg-theme-button-color); }
-        .progress-dot.current { background: var(--tg-theme-link-color); }
+
+        .nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        .nav-btn.back {
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+
+        .nav-btn.next {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .progress-dot {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--tg-theme-secondary-bg-color);
+            transition: background 0.3s;
+        }
+
+        .progress-dot.done {
+            background: var(--tg-theme-button-color);
+        }
+
+        .progress-dot.current {
+            background: var(--tg-theme-link-color);
+        }
+
         .summary {
             background: var(--tg-theme-secondary-bg-color);
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 16px;
         }
+
         .summary-row {
             display: flex;
             justify-content: space-between;
@@ -157,9 +292,20 @@
             border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color) 20%, transparent);
             font-size: 14px;
         }
-        .summary-row:last-child { border-bottom: none; }
-        .summary-row .label { color: var(--tg-theme-hint-color); }
-        .summary-row .value { font-weight: 600; text-align: right; }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row .label {
+            color: var(--tg-theme-hint-color);
+        }
+
+        .summary-row .value {
+            font-weight: 600;
+            text-align: right;
+        }
+
         .price-block {
             background: color-mix(in srgb, var(--tg-theme-button-color) 10%, var(--tg-theme-bg-color));
             border: 2px solid var(--tg-theme-button-color);
@@ -168,10 +314,29 @@
             text-align: center;
             margin-bottom: 16px;
         }
-        .price-block .price-label { font-size: 14px; color: var(--tg-theme-hint-color); }
-        .price-block .price-value { font-size: 28px; font-weight: 700; color: var(--tg-theme-button-color); }
-        .error-msg { color: #e74c3c; font-size: 13px; margin-top: -8px; margin-bottom: 8px; display: none; }
-        .error-msg.visible { display: block; }
+
+        .price-block .price-label {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .price-block .price-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--tg-theme-button-color);
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        .error-msg.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -189,7 +354,7 @@
     <div class="progress-dot"></div>
 </div>
 
-<!-- Шаг 1 -->
+<!-- Шаг 1: Тип организации -->
 <div class="step active" id="step1">
     <div class="step-title"><span class="step-number">1</span> Тип организации</div>
     <div class="btn-group">
@@ -199,7 +364,7 @@
     </div>
 </div>
 
-<!-- Шаг 2 -->
+<!-- Шаг 2: Направление -->
 <div class="step" id="step2">
     <div class="step-title"><span class="step-number">2</span> Категория направления</div>
     <div class="btn-group horizontal">
@@ -216,7 +381,7 @@
     </div>
 </div>
 
-<!-- Шаг 3 -->
+<!-- Шаг 3: Дата поставки -->
 <div class="step" id="step3">
     <div class="step-title"><span class="step-number">3</span> Дата поставки</div>
     <div class="calendar">
@@ -233,7 +398,7 @@
     </div>
 </div>
 
-<!-- Шаг 4 -->
+<!-- Шаг 4: Забор -->
 <div class="step" id="step4">
     <div class="step-title"><span class="step-number">4</span> Требуется ли забор?</div>
     <div class="btn-group horizontal">
@@ -245,7 +410,7 @@
     </div>
 </div>
 
-<!-- Шаг 5 -->
+<!-- Шаг 5: Тип груза -->
 <div class="step" id="step5">
     <div class="step-title"><span class="step-number">5</span> Что везём?</div>
     <div class="btn-group horizontal">
@@ -257,7 +422,7 @@
     </div>
 </div>
 
-<!-- Шаг 6 -->
+<!-- Шаг 6: Объём -->
 <div class="step" id="step6">
     <div class="step-title"><span class="step-number">6</span> Какой объём?</div>
     <input type="number" class="input-field" id="volumeInput" placeholder="Например: 10" min="1" oninput="onVolumeInput()">
@@ -268,7 +433,7 @@
     </div>
 </div>
 
-<!-- Шаг 7 -->
+<!-- Шаг 7: Телефон -->
 <div class="step" id="step7">
     <div class="step-title"><span class="step-number">7</span> Контактный телефон</div>
     <input type="tel" class="input-field" id="phoneInput" placeholder="+7 (999) 123-45-67" oninput="onPhoneInput()">
@@ -294,24 +459,38 @@
 </div>
 
 <script>
+    // ================= ИНИЦИАЛИЗАЦИЯ TELEGRAM WEB APP =================
     const tg = window.Telegram?.WebApp;
     if (tg) {
         tg.ready();
         tg.expand();
     }
 
-    // Данные (синхронизированы с ботом)
+    // ================= ДАННЫЕ (синхронизированы с ботом) =================
     const WAREHOUSES = {
         "Москва": ["Коледино", "Электросталь", "Обухово"],
         "Регионы": ["Тула", "Рязань", "Казань", "Краснодар", "Невинномысск", "Екатеринбург", "Самара", "Котовск", "Шушары"]
     };
 
     const PRICES = {
-        "Обухово":      { "Паллеты": { yes: 2500, no: 1500 }, "Коробки": { yes: 1900, no: 300 } },
-        "Коледино":     { "Паллеты": { yes: 2500, no: 1500 }, "Коробки": { yes: 1900, no: 300 } },
-        "Электросталь": { "Паллеты": { yes: 2500, no: 1500 }, "Коробки": { yes: 1900, no: 300 } },
-        "Тула":         { "Паллеты": { yes: 3000, no: 2000 }, "Коробки": { yes: 350,  no: 350 } },
+        "Обухово": {
+            "Паллеты": { yes: 2500, no: 1500 },
+            "Коробки": { yes: 1900, no: 300 }
+        },
+        "Коледино": {
+            "Паллеты": { yes: 2500, no: 1500 },
+            "Коробки": { yes: 1900, no: 300 }
+        },
+        "Электросталь": {
+            "Паллеты": { yes: 2500, no: 1500 },
+            "Коробки": { yes: 1900, no: 300 }
+        },
+        "Тула": {
+            "Паллеты": { yes: 3000, no: 2000 },
+            "Коробки": { yes: 350, no: 350 }
+        },
     };
+
     const MAX_BOXES_PER_PALLET = 16;
     const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 
@@ -325,17 +504,20 @@
         cargo_type: "",
         volume: 0,
         volume_text: "",
-         phone: ""
+        phone: ""
     };
+
     let currentStep = 1;
     let calYear, calMonth;
 
+    // ================= НАВИГАЦИЯ =================
     function goToStep(n) {
         document.getElementById(`step${currentStep}`).classList.remove('active');
         document.getElementById(`step${n}`).classList.add('active');
         currentStep = n;
         updateProgress();
         window.scrollTo(0, 0);
+
         if (n === 3) initCalendar();
         if (n === 8) buildSummary();
     }
@@ -349,6 +531,7 @@
         });
     }
 
+    // ================= ШАГ 1: Организация =================
     function selectOrg(type) {
         formData.org_type = type;
         document.querySelectorAll('#step1 .btn').forEach(b => b.classList.remove('selected'));
@@ -356,17 +539,21 @@
         setTimeout(() => goToStep(2), 200);
     }
 
+    // ================= ШАГ 2: Направление =================
     function selectCategory(cat) {
         formData.direction_category = cat;
         formData.warehouse = "";
         formData.direction = "";
         document.getElementById('btnStep2Next').disabled = true;
+
         document.querySelectorAll('#step2 > .btn-group .btn').forEach(b => b.classList.remove('selected'));
         event.target.classList.add('selected');
+
         const block = document.getElementById('warehouseBlock');
         const btns = document.getElementById('warehouseButtons');
         btns.innerHTML = "";
         block.style.display = "block";
+
         WAREHOUSES[cat].forEach(wh => {
             const div = document.createElement('div');
             div.className = 'btn btn-warehouse';
@@ -384,6 +571,7 @@
         document.getElementById('btnStep2Next').disabled = false;
     }
 
+    // ================= ШАГ 3: Календарь =================
     function initCalendar() {
         const now = new Date();
         calYear = now.getFullYear();
@@ -407,27 +595,32 @@
         document.getElementById('calendarTitle').textContent = `${MONTHS[calMonth]} ${calYear}`;
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = "";
+
         ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].forEach(d => {
             const el = document.createElement('div');
             el.className = 'day-name';
             el.textContent = d;
             grid.appendChild(el);
         });
+
         const firstDay = new Date(calYear, calMonth, 1).getDay();
         const startDay = firstDay === 0 ? 6 : firstDay - 1;
         const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
         const today = new Date();
         today.setHours(0,0,0,0);
+
         for (let i = 0; i < startDay; i++) {
             const el = document.createElement('div');
             el.className = 'day empty';
             grid.appendChild(el);
         }
+
         for (let d = 1; d <= daysInMonth; d++) {
             const el = document.createElement('div');
             const thisDate = new Date(calYear, calMonth, d);
             el.className = 'day';
             el.textContent = d;
+
             if (thisDate < today) {
                 el.classList.add('disabled');
             } else {
@@ -452,6 +645,7 @@
         document.getElementById('btnStep3Next').disabled = false;
     }
 
+    // ================= ШАГ 4: Забор =================
     function selectPickup(val) {
         formData.pickup = val;
         document.querySelectorAll('#step4 .btn').forEach(b => b.classList.remove('selected'));
@@ -459,6 +653,7 @@
         setTimeout(() => goToStep(5), 200);
     }
 
+    // ================= ШАГ 5: Груз =================
     function selectCargo(val) {
         formData.cargo_type = val;
         document.querySelectorAll('#step5 .btn').forEach(b => b.classList.remove('selected'));
@@ -466,6 +661,7 @@
         setTimeout(() => goToStep(6), 200);
     }
 
+    // ================= ШАГ 6: Объём =================
     function onVolumeInput() {
         const val = parseInt(document.getElementById('volumeInput').value);
         const err = document.getElementById('volumeError');
@@ -477,10 +673,15 @@
             err.classList.remove('visible');
             btn.disabled = false;
             formData.volume = val;
-            formData.volume_text = formData.cargo_type === "Коробки" ? `${val} Коробки` : `${val} Паллет`;
+            if (formData.cargo_type === "Коробки") {
+                formData.volume_text = `${val} Коробки`;
+            } else {
+                formData.volume_text = `${val} Паллет`;
+            }
         }
     }
 
+    // ================= ШАГ 7: Телефон =================
     function onPhoneInput() {
         const raw = document.getElementById('phoneInput').value.replace(/\D/g, '');
         const err = document.getElementById('phoneError');
@@ -498,21 +699,36 @@
         }
     }
 
+    // ================= ШАГ 8: Итог =================
     function calculatePrice() {
         const wh = formData.warehouse;
         const cargo = formData.cargo_type;
         const vol = formData.volume;
         const pickup = formData.pickup === "Да" ? "yes" : "no";
+
         if (!PRICES[wh]) return "По запросу";
-        if (cargo === "Коробки" && vol > 10) {
-            if (!PRICES[wh]["Паллеты"]) return "По запросу";
-            const pallets = Math.ceil(vol / MAX_BOXES_PER_PALLET);
-            const total = PRICES[wh]["Паллеты"][pickup] * pallets;
-            return `${total.toLocaleString('ru-RU')} ₽ (≈ ${pallets} палл.)`;
+
+        // Логика для коробок
+        if (cargo === "Коробки") {
+            if (vol > 10) {
+                if (!PRICES[wh]["Паллеты"]) return "По запросу";
+                const pallets = Math.ceil(vol / MAX_BOXES_PER_PALLET);
+                const total = PRICES[wh]["Паллеты"][pickup] * pallets;
+                return `${total.toLocaleString('ru-RU')} ₽ (≈ ${pallets} палл.)`;
+            }
+            if (!PRICES[wh]["Коробки"]) return "По запросу";
+            const total = PRICES[wh]["Коробки"][pickup] * vol;
+            return `${total.toLocaleString('ru-RU')} ₽`;
         }
-        if (!PRICES[wh][cargo]) return "По запросу";
-        const total = PRICES[wh][cargo][pickup] * vol;
-        return `${total.toLocaleString('ru-RU')} ₽`;
+
+        // Логика для паллет
+        if (cargo === "Паллеты") {
+            if (!PRICES[wh]["Паллеты"]) return "По запросу";
+            const total = PRICES[wh]["Паллеты"][pickup] * vol;
+            return `${total.toLocaleString('ru-RU')} ₽`;
+        }
+
+        return "По запросу";
     }
 
     function buildSummary() {
@@ -529,18 +745,22 @@
         block.innerHTML = rows.map(([l, v]) =>
             `<div class="summary-row"><span class="label">${l}</span><span class="value">${v}</span></div>`
         ).join('');
+
         document.getElementById('priceValue').textContent = calculatePrice();
     }
 
+    // ================= ОТПРАВКА =================
     function submitForm() {
-    if (tg) {
-        tg.sendData(JSON.stringify(formData));
-        tg.close();
-    } else {
-        alert("Данные:\n" + JSON.stringify(formData, null, 2));
+        if (tg) {
+            tg.sendData(JSON.stringify(formData));
+            tg.close();
+        } else {
+            // Для тестирования вне Telegram
+            alert("Данные для отправки:\n" + JSON.stringify(formData, null, 2));
+        }
     }
-}
 
+    // Инициализация
     updateProgress();
 </script>
 

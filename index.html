@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Заявка на доставку</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-hint-color: #999999;
+            --tg-theme-link-color: #2481cc;
+            --tg-theme-button-color: #2481cc;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f0f0f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            padding: 16px;
+            padding-bottom: 100px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-number {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .btn-group.horizontal {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .btn-group.horizontal .btn {
+            flex: 1;
+            min-width: calc(50% - 4px);
+        }
+
+        .btn {
+            background: var(--tg-theme-secondary-bg-color);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 15px;
+            color: var(--tg-theme-text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn.selected {
+            border-color: var(--tg-theme-button-color);
+            background: color-mix(in srgb, var(--tg-theme-button-color) 10%, var(--tg-theme-bg-color));
+        }
+
+        .btn-warehouse {
+            font-size: 14px;
+            padding: 12px 10px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            font-size: 16px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .input-field:focus {
+            border-color: var(--tg-theme-button-color);
+        }
+
+        .input-field::placeholder {
+            color: var(--tg-theme-hint-color);
+        }
+
+        .calendar {
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .calendar-header button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--tg-theme-link-color);
+            padding: 4px 12px;
+        }
+
+        .calendar-header span {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .calendar-grid .day-name {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            font-weight: 600;
+            padding: 4px 0;
+        }
+
+        .calendar-grid .day {
+            padding: 8px 4px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-grid .day:hover:not(.disabled):not(.empty) {
+            background: color-mix(in srgb, var(--tg-theme-button-color) 20%, transparent);
+        }
+
+        .calendar-grid .day.selected {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            font-weight: 700;
+        }
+
+        .calendar-grid .day.disabled {
+            color: var(--tg-theme-hint-color);
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .calendar-grid .day.empty {
+            cursor: default;
+        }
+
+        .calendar-grid .day.today {
+            border: 2px solid var(--tg-theme-button-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.97);
+        }
+
+        .nav-btn.back {
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+
+        .nav-btn.next {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .progress-dot {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--tg-theme-secondary-bg-color);
+            transition: background 0.3s;
+        }
+
+        .progress-dot.done {
+            background: var(--tg-theme-button-color);
+        }
+
+        .progress-dot.current {
+            background: var(--tg-theme-link-color);
+        }
+
+        .summary {
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid color-mix(in srgb, var(--tg-theme-hint-color) 20%, transparent);
+            font-size: 14px;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row .label {
+            color: var(--tg-theme-hint-color);
+        }
+
+        .summary-row .value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .price-block {
+            background: color-mix(in srgb, var(--tg-theme-button-color) 10%, var(--tg-theme-bg-color));
+            border: 2px solid var(--tg-theme-button-color);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .price-block .price-label {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .price-block .price-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--tg-theme-button-color);
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        .error-msg.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📦 Заявка на доставку</h1>
+<p class="subtitle">Заполните форму — это займёт 1 минуту</p>
+
+<!-- Прогресс-бар -->
+<div class="progress-bar" id="progressBar">
+    <div class="progress-dot current"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+    <div class="progress-dot"></div>
+</div>
+
+<!-- Шаг 1: Тип организации -->
+<div class="step active" id="step1">
+    <div class="step-title"><span class="step-number">1</span> Тип организации</div>
+    <div class="btn-group">
+        <div class="btn" onclick="selectOrg('ИП')">🏢 ИП</div>
+        <div class="btn" onclick="selectOrg('ООО')">🏭 ООО</div>
+        <div class="btn" onclick="selectOrg('Физ.лицо')">👤 Физ.лицо</div>
+    </div>
+</div>
+
+<!-- Шаг 2: Направление -->
+<div class="step" id="step2">
+    <div class="step-title"><span class="step-number">2</span> Категория направления</div>
+    <div class="btn-group horizontal">
+        <div class="btn" onclick="selectCategory('Москва')">🏙 Москва</div>
+        <div class="btn" onclick="selectCategory('Регионы')">🌍 Регионы</div>
+    </div>
+    <div id="warehouseBlock" style="display:none;">
+        <div class="step-title" style="margin-top:12px;">📍 Выберите склад</div>
+        <div class="btn-group horizontal" id="warehouseButtons"></div>
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goToStep(1)">← Назад</button>
+        <button class="nav-btn next" id="btnStep2Next" onclick="goToStep(3)" disabled>Далее →</button>
+    </div>
+</div>
+
+<!-- Шаг 3: Дата поставки -->
+<div class="step" id="step3">
+    <div class="step-title"><span class="step-number">3</span> Дата поставки</div>
+    <div class="calendar">
+        <div class="calendar-header">
+            <button onclick="changeMonth(-1)">◀</button>
+            <span id="calendarTitle"></span>
+            <button onclick="changeMonth(1)">▶</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goToStep(2)">← Назад</button>
+        <button class="nav-btn next" id="btnStep3Next" onclick="goToStep(4)" disabled>Далее →</button>
+    </div>
+</div>
+
+<!-- Шаг 4: Забор -->
+<div class="step" id="step4">
+    <div class="step-title"><span class="step-number">4</span> Требуется ли забор?</div>
+    <div class="btn-group horizontal">
+        <div class="btn" onclick="selectPickup('Да')">✅ Да</div>
+        <div class="btn" onclick="selectPickup('Нет')">❌ Нет</div>
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goToStep(3)">← Назад</button>
+    </div>
+</div>
+
+<!-- Шаг 5: Тип груза -->
+<div class="step" id="step5">
+    <div class="step-title"><span class="step-number">5</span> Что везём?</div>
+    <div class="btn-group horizontal">
+        <div class="btn" onclick="selectCargo('Коробки')">📦 Коробки</div>
+        <div class="btn" onclick="selectCargo('Паллеты')">🟫 Паллеты</div>
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goToStep(4)">← Назад</button>
+    </div>
+</div>
+
+<!-- Шаг 6: Объём -->
+<div class="step" id="step6">
+    <div class="step-title"><span class="step-number">6</span> Какой объём?</div>
+    <input type="number" class="input-field" id="volumeInput" placeholder="Например: 10" min="1" oninput="onVolumeInput()">
+    <p class="error-msg" id="volumeError">Введите целое положительное число</p>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goToStep(5)">← Назад</button>
+        <button class="nav-btn next" id="btnStep6Next" onclick="goToStep(7)" disabled>Далее →</button>
+    </div>
+</div>
+
+<!-- Шаг 7: Телефон -->
+<div class="step" id="step7">
+    <div class="step-title"><span class="step-number">7</span> Контактный телефон</div>
+    <input type="tel" class="input-field" id="phoneInput" placeholder="+7 (999) 123-45-67" oninput="onPhoneInput()">
+    <p class="error-msg" id="phoneError">Введите корректный номер телефона</p>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goToStep(6)">← Назад</button>
+        <button class="nav-btn next" id="btnStep7Next" onclick="goToStep(8)" disabled>Далее →</button>
+    </div>
+</div>
+
+<!-- Шаг 8: Подтверждение -->
+<div class="step" id="step8">
+    <div class="step-title">📋 Проверьте данные</div>
+    <div class="summary" id="summaryBlock"></div>
+    <div class="price-block" id="priceBlock">
+        <div class="price-label">Стоимость</div>
+        <div class="price-value" id="priceValue">—</div>
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="goToStep(7)">← Назад</button>
+        <button class="nav-btn next" onclick="submitForm()" style="background:#27ae60;">✅ Отправить заявку</button>
+    </div>
+</div>
+
+<script>
+    // ================= ИНИЦИАЛИЗАЦИЯ TELEGRAM WEB APP =================
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('#ffffff');
+        tg.setBackgroundColor('#ffffff');
+    }
+
+    // ================= ДАННЫЕ =================
+    const WAREHOUSES = {
+        "Москва": ["Коледино", "Электросталь", "Обухово"],
+        "Регионы": ["Тула", "Рязань", "Казань", "Краснодар", "Невинномысск", "Екатеринбург", "Самара", "Котовск", "Шушары"]
+    };
+
+    const PRICES = {
+        "Обухово":       { "Паллеты": { yes: 2500, no: 1500 }, "Коробки": { yes: 1900, no: 300 } },
+        "Коледино":      { "Паллеты": { yes: 2500, no: 1500 }, "Коробки": { yes: 1900, no: 300 } },
+        "Электросталь":  { "Паллеты": { yes: 2500, no: 1500 }, "Коробки": { yes: 1900, no: 300 } },
+        "Тула":          { "Паллеты": { yes: 3000, no: 2000 }, "Коробки": { yes: 350,  no: 350 } },
+    };
+
+    const MAX_BOXES_PER_PALLET = 16;
+    const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+
+    let formData = {
+        org_type: "",
+        direction_category: "",
+        warehouse: "",
+        direction: "",
+        delivery_date: "",
+        pickup: "",
+        cargo_type: "",
+        volume: 0,
+        volume_text: "",
+        phone: ""
+    };
+
+    let currentStep = 1;
+    let calYear, calMonth;
+
+    // ================= НАВИГАЦИЯ =================
+    function goToStep(n) {
+        document.getElementById(`step${currentStep}`).classList.remove('active');
+        document.getElementById(`step${n}`).classList.add('active');
+        currentStep = n;
+        updateProgress();
+        window.scrollTo(0, 0);
+
+        if (n === 3) initCalendar();
+        if (n === 8) buildSummary();
+    }
+
+    function updateProgress() {
+        const dots = document.querySelectorAll('.progress-dot');
+        dots.forEach((d, i) => {
+            d.className = 'progress-dot';
+            if (i + 1 < currentStep) d.classList.add('done');
+            if (i + 1 === currentStep) d.classList.add('current');
+        });
+    }
+
+    // ================= ШАГ 1: Организация =================
+    function selectOrg(type) {
+        formData.org_type = type;
+        document.querySelectorAll('#step1 .btn').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+        setTimeout(() => goToStep(2), 200);
+    }
+
+    // ================= ШАГ 2: Направление =================
+    function selectCategory(cat) {
+        formData.direction_category = cat;
+        formData.warehouse = "";
+        formData.direction = "";
+        document.getElementById('btnStep2Next').disabled = true;
+
+        document.querySelectorAll('#step2 > .btn-group .btn').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+
+        const block = document.getElementById('warehouseBlock');
+        const btns = document.getElementById('warehouseButtons');
+        btns.innerHTML = "";
+        block.style.display = "block";
+
+        WAREHOUSES[cat].forEach(wh => {
+            const div = document.createElement('div');
+            div.className = 'btn btn-warehouse';
+            div.textContent = wh;
+            div.onclick = () => selectWarehouse(wh, div);
+            btns.appendChild(div);
+        });
+    }
+
+    function selectWarehouse(wh, el) {
+        formData.warehouse = wh;
+        formData.direction = `${formData.direction_category} — ${wh}`;
+        document.querySelectorAll('#warehouseButtons .btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('btnStep2Next').disabled = false;
+    }
+
+    // ================= ШАГ 3: Календарь =================
+    function initCalendar() {
+        const now = new Date();
+        calYear = now.getFullYear();
+        calMonth = now.getMonth();
+        renderCalendar();
+    }
+
+    function changeMonth(delta) {
+        calMonth += delta;
+        if (calMonth < 0) { calMonth = 11; calYear--; }
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        const now = new Date();
+        if (calYear < now.getFullYear() || (calYear === now.getFullYear() && calMonth < now.getMonth())) {
+            calMonth = now.getMonth();
+            calYear = now.getFullYear();
+        }
+        renderCalendar();
+    }
+
+    function renderCalendar() {
+        document.getElementById('calendarTitle').textContent = `${MONTHS[calMonth]} ${calYear}`;
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = "";
+
+        ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'day-name';
+            el.textContent = d;
+            grid.appendChild(el);
+        });
+
+        const firstDay = new Date(calYear, calMonth, 1).getDay();
+        const startDay = firstDay === 0 ? 6 : firstDay - 1;
+        const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        for (let i = 0; i < startDay; i++) {
+            const el = document.createElement('div');
+            el.className = 'day empty';
+            grid.appendChild(el);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const el = document.createElement('div');
+            const thisDate = new Date(calYear, calMonth, d);
+            el.className = 'day';
+            el.textContent = d;
+
+            if (thisDate < today) {
+                el.classList.add('disabled');
+            } else {
+                if (thisDate.getTime() === today.getTime()) el.classList.add('today');
+                if (formData.delivery_date === formatDate(thisDate)) el.classList.add('selected');
+                el.onclick = () => selectDate(thisDate, el);
+            }
+            grid.appendChild(el);
+        }
+    }
+
+    function formatDate(d) {
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        return `${dd}.${mm}.${d.getFullYear()}`;
+    }
+
+    function selectDate(d, el) {
+        formData.delivery_date = formatDate(d);
+        document.querySelectorAll('.calendar-grid .day').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('btnStep3Next').disabled = false;
+    }
+
+    // ================= ШАГ 4: Забор =================
+    function selectPickup(val) {
+        formData.pickup = val;
+        document.querySelectorAll('#step4 .btn').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+        setTimeout(() => goToStep(5), 200);
+    }
+
+    // ================= ШАГ 5: Груз =================
+    function selectCargo(val) {
+        formData.cargo_type = val;
+        document.querySelectorAll('#step5 .btn').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+        setTimeout(() => goToStep(6), 200);
+    }
+
+    // ================= ШАГ 6: Объём =================
+    function onVolumeInput() {
+        const val = parseInt(document.getElementById('volumeInput').value);
+        const err = document.getElementById('volumeError');
+        const btn = document.getElementById('btnStep6Next');
+        if (isNaN(val) || val <= 0) {
+            err.classList.add('visible');
+            btn.disabled = true;
+        } else {
+            err.classList.remove('visible');
+            btn.disabled = false;
+            formData.volume = val;
+            if (formData.cargo_type === "Коробки") {
+                formData.volume_text = `${val} Коробки`;
+            } else {
+                formData.volume_text = `${val} Паллет`;
+            }
+        }
+    }
+
+    // ================= ШАГ 7: Телефон =================
+    function onPhoneInput() {
+        const raw = document.getElementById('phoneInput').value.replace(/\D/g, '');
+        const err = document.getElementById('phoneError');
+        const btn = document.getElementById('btnStep7Next');
+        let digits = raw;
+        if (digits.startsWith('8') && digits.length === 11) digits = '7' + digits.slice(1);
+        if (digits.length === 10) digits = '7' + digits;
+        if (digits.length === 11 && digits.startsWith('7')) {
+            err.classList.remove('visible');
+            btn.disabled = false;
+            formData.phone = `+${digits}`;
+        } else {
+            err.classList.add('visible');
+            btn.disabled = true;
+        }
+    }
+
+    // ================= ШАГ 8: Итог =================
+    function calculatePrice() {
+        const wh = formData.warehouse;
+        const cargo = formData.cargo_type;
+        const vol = formData.volume;
+        const pickup = formData.pickup === "Да" ? "yes" : "no";
+
+        if (!PRICES[wh]) return "По запросу";
+
+        if (cargo === "Коробки" && vol > 10) {
+            if (!PRICES[wh]["Паллеты"]) return "По запросу";
+            const pallets = Math.ceil(vol / MAX_BOXES_PER_PALLET);
+            const total = PRICES[wh]["Паллеты"][pickup] * pallets;
+            return `${total.toLocaleString('ru-RU')} ₽ (≈ ${pallets} палл.)`;
+        }
+
+        if (!PRICES[wh][cargo]) return "По запросу";
+        const total = PRICES[wh][cargo][pickup] * vol;
+        return `${total.toLocaleString('ru-RU')} ₽`;
+    }
+
+    function buildSummary() {
+        const block = document.getElementById('summaryBlock');
+        const rows = [
+            ["Тип", formData.org_type],
+            ["Направление", formData.direction],
+            ["Дата", formData.delivery_date],
+            ["Забор", formData.pickup],
+            ["Груз", formData.cargo_type],
+            ["Объём", formData.volume_text],
+            ["Телефон", formData.phone]
+        ];
+        block.innerHTML = rows.map(([l, v]) =>
+            `<div class="summary-row"><span class="label">${l}</span><span class="value">${v}</span></div>`
+        ).join('');
+
+        document.getElementById('priceValue').textContent = calculatePrice();
+    }
+
+    // ================= ОТПРАВКА =================
+    function submitForm() {
+        const data = JSON.stringify(formData);
+
+        if (tg) {
+            tg.sendData(data);
+        } else {
+            // Для тестирования вне Telegram
+            alert("Данные для отправки:\n" + JSON.stringify(formData, null, 2));
+        }
+    }
+
+    // Инициализация
+    updateProgress();
+</script>
+
+</body>
+</html>

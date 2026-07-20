@@ -316,9 +316,16 @@
     const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 
     let formData = {
-        org_type: "", direction_category: "", warehouse: "", direction: "",
-        delivery_date: "", pickup: "", cargo_type: "", volume: 0,
-        volume_text: "", phone: ""
+        org_type: "",
+        direction_category: "",
+        warehouse: "",
+        direction: "",
+        delivery_date: "",
+        pickup: "",
+        cargo_type: "",
+        volume: 0,
+        volume_text: "",
+         phone: ""
     };
     let currentStep = 1;
     let calYear, calMonth;
@@ -526,13 +533,13 @@
     }
 
     function submitForm() {
-        if (tg) {
-            tg.sendData(JSON.stringify(formData));
-            tg.close();
-        } else {
-            alert("Данные:\n" + JSON.stringify(formData, null, 2));
-        }
+    if (tg) {
+        tg.sendData(JSON.stringify(formData));
+        tg.close();
+    } else {
+        alert("Данные:\n" + JSON.stringify(formData, null, 2));
     }
+}
 
     updateProgress();
 </script>

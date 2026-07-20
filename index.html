@@ -751,14 +751,37 @@
 
     // ================= ОТПРАВКА =================
     function submitForm() {
-        if (tg) {
-            tg.sendData(JSON.stringify(formData));
-            tg.close();
-        } else {
-            // Для тестирования вне Telegram
-            alert("Данные для отправки:\n" + JSON.stringify(formData, null, 2));
-        }
+    if (tg) {
+        // 1. Показываем попап подтверждения
+        tg.showPopup({
+            title: "Отправка заявки",
+            message: "Вы уверены, что хотите отправить заявку?",
+            buttons: [
+                {id: "confirm", type: "default", text: "✅ Да, отправить"},
+                {id: "cancel", type: "cancel", text: "Отмена"}
+            ]
+        }, async (btn) => {
+            if (btn === "confirm") {
+                // 2. Отправляем данные
+                tg.sendData(JSON.stringify(formData));
+                
+                // 3. Показываем уведомление об успехе
+                tg.showPopup({
+                    title: "✅ Успешно!",
+                    message: "Ваша заявка отправлена. Менеджер свяжется с вами в ближайшее время.",
+                    buttons: [{id: "ok", type: "default", text: "OK"}]
+                });
+                
+                // 4. Закрываем приложение С ЗАДЕРЖКОЙ (чтобы данные успели дойти)
+                setTimeout(() => {
+                    tg.close();
+                }, 1500);
+            }
+        });
+    } else {
+        alert("Данные для отправки:\n" + JSON.stringify(formData, null, 2));
     }
+}
 
     // Инициализация
     updateProgress();

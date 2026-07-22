@@ -259,7 +259,7 @@
 </div>
 
 <div class="step" id="step3">
-    <div class="step-title"><span class="step-number">3</span> Дата поставки</div>
+    <div class="step-title"><span class="step-number">3</span> Дата привоза</div>
     <p id="pickupScheduleHint" class="hint-text" style="padding:0 0 10px; text-align:left;"></p>
     <div class="calendar">
         <div class="calendar-header">
@@ -270,7 +270,7 @@
         <div class="calendar-grid" id="calendarGrid"></div>
     </div>
     <div class="price-block" id="arrivalDateBlock" style="display:none; margin-top:12px;">
-        <div class="price-label">📦 Дата привоза на склад WB</div>
+        <div class="price-label">📦 Дата поставки на склад WB</div>
         <div class="price-value" id="arrivalDateValue" style="font-size:20px;">—</div>
     </div>
     <div class="nav-buttons">
@@ -366,7 +366,7 @@
     <div class="step-title" style="margin-top:8px;">Склад</div>
     <div class="btn-group horizontal" id="detailWarehouseButtons"></div>
 
-    <div class="step-title">Дата поставки</div>
+    <div class="step-title">Дата привоза</div>
     <p id="detailScheduleHint" class="hint-text" style="text-align:left; padding:0 0 8px;"></p>
     <input type="date" class="input-field" id="detailDate" onchange="onDetailFieldChange()">
 
@@ -389,7 +389,7 @@
     <input type="tel" class="input-field" id="detailPhone" maxlength="18" oninput="onDetailPhoneInput()">
 
     <div class="price-block" id="detailArrivalBlock" style="margin-bottom:12px;">
-        <div class="price-label">📦 Дата привоза на склад WB</div>
+        <div class="price-label">📦 Дата поставки на склад WB</div>
         <div class="price-value" id="detailArrivalValue" style="font-size:20px;">—</div>
     </div>
 
@@ -450,8 +450,8 @@
         return "Выезд: " + [...allowed].sort((a, b) => a - b).map(i => WEEKDAY_NAMES_BY_GETDAY[i]).join(", ");
     }
 
-    // "Дата привоза" (когда груз реально попадёт на склад WB) считается от
-    // "даты поставки" (которую выбирает клиент) автоматически — клиент её не
+    // "Дата поставки" (когда груз реально попадёт на склад WB) считается от
+    // "даты привоза" (которую выбирает клиент) автоматически — клиент её не
     // выбирает, только видит результат. Держим в синхроне с
     // DELIVERY_OFFSET_DAYS в pricing.py (там дни недели по d.weekday(),
     // здесь — по d.getDay(), поэтому нумерация отличается, но набор дней тот же).
@@ -578,7 +578,7 @@
         el.classList.add('selected');
         document.getElementById('btnStep2Next').disabled = false;
 
-        // Дата поставки выбиралась под другой склад — у нового может быть
+        // Дата привоза выбиралась под другой склад — у нового может быть
         // другой график выезда, поэтому сбрасываем, чтобы не проскочила
         // невалидная дата.
         formData.delivery_date = "";
@@ -758,8 +758,8 @@
             ["Тип", formData.org_type],
             ["Организация/ФИО", formData.company_name],
             ["Направление", formData.direction],
-            ["Дата поставки", formData.delivery_date],
-            ["📦 Дата привоза", formData.arrival_date],
+            ["Дата привоза", formData.delivery_date],
+            ["📦 Дата поставки", formData.arrival_date],
             ["Забор", formData.pickup],
             ["Груз", formData.cargo_type],
             ["Объём", formData.volume_text],

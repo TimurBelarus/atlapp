@@ -758,13 +758,10 @@
     async function loadMyRequests() {
         const content = document.getElementById('myListContent');
         if (!tg || !tg.initData) {
-            // Временная диагностика — помогает понять, ПОЧЕМУ initData пуст
-            // (сам SDK не загрузился / Telegram не передал данные / версия клиента).
-            const debug = tg
-                ? `tg есть; platform=${tg.platform}; version=${tg.version}; initData.length=${(tg.initData || '').length}; initDataUnsafe=${JSON.stringify(tg.initDataUnsafe || {})}`
-                : 'window.Telegram.WebApp вообще не создан (скрипт telegram-web-app.js не сработал)';
-            content.innerHTML = `<p class="hint-text">Личный кабинет доступен только внутри Telegram.</p>
-                <p class="hint-text" style="font-size:11px; word-break:break-all;">${escapeHtml(debug)}</p>`;
+            // Telegram не передаёт initData, если Mini App открыт через кнопку
+            // обычной Reply-клавиатуры — только через Menu Button (кнопка 📱
+            // рядом с полем ввода), inline-кнопку или прямую ссылку. См. bot.py.
+            content.innerHTML = '<p class="hint-text">Откройте приложение через кнопку 📱 рядом с полем ввода сообщения (Menu Button) — оттуда личный кабинет работает.</p>';
             return;
         }
         content.innerHTML = '<p class="hint-text">Загрузка…</p>';

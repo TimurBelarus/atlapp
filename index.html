@@ -260,6 +260,7 @@
 
 <div class="step" id="step3">
     <div class="step-title"><span class="step-number">3</span> Дата поставки</div>
+    <p id="pickupScheduleHint" class="hint-text" style="padding:0 0 10px; text-align:left;"></p>
     <div class="calendar">
         <div class="calendar-header">
             <button onclick="changeMonth(-1)">◀</button>
@@ -362,7 +363,8 @@
     <div class="btn-group horizontal" id="detailWarehouseButtons"></div>
 
     <div class="step-title">Дата поставки</div>
-    <input type="date" class="input-field" id="detailDate" oninput="onDetailFieldChange()">
+    <p id="detailScheduleHint" class="hint-text" style="text-align:left; padding:0 0 8px;"></p>
+    <input type="date" class="input-field" id="detailDate" onchange="onDetailFieldChange()">
 
     <div class="step-title">Требуется забор?</div>
     <div class="btn-group horizontal" id="detailPickupButtons">
@@ -407,8 +409,37 @@
 
     const WAREHOUSES = {
         "Москва": ["Коледино", "Электросталь", "Обухово"],
-        "Регионы": ["Тула", "Рязань", "Казань", "Краснодар", "Невинномысск", "Екатеринбург", "Самара", "Котовск", "Шушары"]
+        "Регионы": ["Тула", "Рязань", "Казань", "Краснодар", "Невинномысск", "Екатеринбург", "Новосемейкино", "Котовск", "Шушары"]
     };
+
+    // "Выезд" — день, когда можно привезти товар на конкретный региональный
+    // склад. Держим в синхроне с PICKUP_SCHEDULE в pricing.py. Дни недели —
+    // как в Date.getDay(): 0=Вс, 1=Пн, 2=Вт, 3=Ср, 4=Чт, 5=Пт, 6=Сб.
+    // Склады Москвы сюда не входят — там ограничений нет (любой день).
+    const PICKUP_SCHEDULE = {
+        "Тула":          [1, 2, 3, 4, 5, 6],   // каждый день, кроме воскресенья
+        "Рязань":        [1, 2, 3, 4, 5, 6],   // каждый день, кроме воскресенья
+        "Казань":        [1, 3, 5],            // пн, ср, пт
+        "Краснодар":     [1, 4],               // пн, чт
+        "Невинномысск":  [1, 4],               // пн, чт
+        "Екатеринбург":  [3, 5],                // ср, пт
+        "Новосемейкино": [2, 4],                // вт, чт
+        "Котовск":       [0, 1, 2, 3, 4, 5],    // каждый день, кроме субботы
+        "Шушары":        [1, 3, 5],             // пн, ср, пт
+    };
+    const WEEKDAY_NAMES_BY_GETDAY = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+
+    function isPickupDay(warehouse, d) {
+        const allowed = PICKUP_SCHEDULE[warehouse];
+        if (!allowed) return true; // склады Москвы — без ограничений
+        return allowed.includes(d.getDay());
+    }
+
+    function pickupScheduleLabel(warehouse) {
+        const allowed = PICKUP_SCHEDULE[warehouse];
+        if (!allowed) return "Выезд ежедневно";
+        return "Выезд: " + [...allowed].sort((a, b) => a - b).map(i => WEEKDAY_NAMES_BY_GETDAY[i]).join(", ");
+    }
 
     const PRICES = {
         "Обухово":      { "Паллеты": { yes: 2500, no: 1500 }, "Коробки": { yes: 1900, no: 300 } },
@@ -532,6 +563,8 @@
 
     function renderCalendar() {
         document.getElementById('calendarTitle').textContent = `${MONTHS[calMonth]} ${calYear}`;
+        const hint = document.getElementById('pickupScheduleHint');
+        if (hint) hint.textContent = formData.warehouse ? pickupScheduleLabel(formData.warehouse) : '';
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = "";
         ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].forEach(d => {
@@ -555,7 +588,7 @@
             const thisDate = new Date(calYear, calMonth, d);
             el.className = 'day';
             el.textContent = d;
-            if (thisDate < today) {
+            if (thisDate < today || !isPickupDay(formData.warehouse, thisDate)) {
                 el.classList.add('disabled');
             } else {
                 if (thisDate.getTime() === today.getTime()) el.classList.add('today');
@@ -855,11 +888,17 @@
         renderDetailForm();
     }
 
+    function updateDetailScheduleHint() {
+        const hint = document.getElementById('detailScheduleHint');
+        hint.textContent = detailForm.warehouse ? pickupScheduleLabel(detailForm.warehouse) : '';
+    }
+
     function renderDetailForm() {
         document.getElementById('detailCompanyName').value = detailForm.company_name || '';
         const dateInput = document.getElementById('detailDate');
         dateInput.value = detailForm.delivery_date || '';
         dateInput.min = new Date().toISOString().slice(0, 10);
+        updateDetailScheduleHint();
         document.getElementById('detailVolume').value = detailForm.volume || '';
         document.getElementById('detailPhone').value = detailForm.phone ? formatPhoneMask(detailForm.phone.replace(/\D/g, '').slice(1)) : '';
 
@@ -919,6 +958,16 @@
                 if (!detailCanModify) return;
                 detailForm.warehouse = wh;
                 renderDetailWarehouses();
+                updateDetailScheduleHint();
+                // Если ранее выбранная дата не подходит под график нового склада — сбрасываем её.
+                if (detailForm.delivery_date) {
+                    const [y, m, d] = detailForm.delivery_date.split('-').map(Number);
+                    if (!isPickupDay(wh, new Date(y, m - 1, d))) {
+                        detailForm.delivery_date = '';
+                        document.getElementById('detailDate').value = '';
+                        alert('Дата сброшена: ' + pickupScheduleLabel(wh) + ' — выбранный день не подходит новому складу.');
+                    }
+                }
                 updateDetailPrice();
             };
             container.appendChild(div);
@@ -956,7 +1005,20 @@
 
     function onDetailFieldChange() {
         detailForm.company_name = document.getElementById('detailCompanyName').value.trim();
-        detailForm.delivery_date = document.getElementById('detailDate').value;
+
+        const dateInput = document.getElementById('detailDate');
+        if (dateInput.value) {
+            const [y, m, d] = dateInput.value.split('-').map(Number);
+            if (!isPickupDay(detailForm.warehouse, new Date(y, m - 1, d))) {
+                alert('В этот день нет выезда на выбранный склад. ' + pickupScheduleLabel(detailForm.warehouse));
+                dateInput.value = detailForm.delivery_date || '';
+            } else {
+                detailForm.delivery_date = dateInput.value;
+            }
+        } else {
+            detailForm.delivery_date = '';
+        }
+
         const vol = parseInt(document.getElementById('detailVolume').value);
         detailForm.volume = isNaN(vol) ? 0 : vol;
         updateDetailPrice();

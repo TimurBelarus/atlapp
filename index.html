@@ -744,7 +744,14 @@
     }
 
     async function apiFetch(path, options = {}) {
-        const headers = { 'X-Telegram-Init-Data': tg ? tg.initData : '' };
+        const headers = {
+            'X-Telegram-Init-Data': tg ? tg.initData : '',
+            // Бесплатный ngrok показывает межстраничную HTML-заглушку браузерным
+            // запросам без этого заголовка — без него fetch() падает с "Failed to
+            // fetch" (ответ без CORS-заголовков). На постоянном хостинге без ngrok
+            // этот заголовок безвреден, можно не убирать.
+            'ngrok-skip-browser-warning': 'true',
+        };
         if (options.body) headers['Content-Type'] = 'application/json';
         const res = await fetch(API_BASE + path, { ...options, headers: { ...headers, ...(options.headers || {}) } });
         if (!res.ok) {

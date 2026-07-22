@@ -172,13 +172,51 @@
         .price-block .price-value { font-size: 28px; font-weight: 700; color: var(--tg-theme-button-color); }
         .error-msg { color: #e74c3c; font-size: 13px; margin-top: -8px; margin-bottom: 8px; display: none; }
         .error-msg.visible { display: block; }
+
+        .ship-card {
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .ship-card:active { transform: scale(0.98); }
+        .ship-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+        .ship-card-row { font-size: 13px; color: var(--tg-theme-hint-color); margin-top: 2px; }
+        .status-pill {
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .detail-banner {
+            background: #fdecea;
+            color: #c0392b;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .input-field:disabled { opacity: 0.6; }
+        .hint-text { color: var(--tg-theme-hint-color); font-size: 13px; text-align: center; padding: 20px 0; }
     </style>
 </head>
 <body>
 
-<h1>📦 Заявка на доставку</h1>
-<p class="subtitle">Заполните форму — это займёт 1 минуту</p>
+<h1>📦 WB Tranzit</h1>
+<p class="subtitle">Заявки на доставку на склад WB</p>
 
+<div id="homeScreen">
+    <div class="btn-group" style="margin-top: 24px;">
+        <div class="btn" onclick="showScreen('wizard'); goToStep(1);">📝 Новая заявка</div>
+        <div class="btn" onclick="showScreen('myList'); loadMyRequests();">📦 Мои заявки</div>
+    </div>
+</div>
+
+<div id="wizardScreen" style="display:none;">
 <div class="progress-bar" id="progressBar">
     <div class="progress-dot current"></div>
     <div class="progress-dot"></div>
@@ -290,6 +328,74 @@
         <button class="nav-btn next" onclick="submitForm()" style="background:#27ae60;">✅ Отправить заявку</button>
     </div>
 </div>
+</div><!-- /wizardScreen -->
+
+<div id="myListScreen" style="display:none;">
+    <div class="step-title">📦 Мои заявки</div>
+    <div id="myListContent"><p class="hint-text">Загрузка…</p></div>
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="showScreen('home')">← Назад в меню</button>
+    </div>
+</div>
+
+<div id="detailScreen" style="display:none;">
+    <div class="step-title">📄 Заявка №<span id="detailId"></span></div>
+    <div class="detail-banner" id="detailBanner" style="display:none;"></div>
+
+    <div class="step-title" style="margin-top:12px;">Тип организации</div>
+    <div class="btn-group horizontal" id="detailOrgButtons">
+        <div class="btn" data-val="ИП" onclick="detailSelectOrg('ИП')">🏢 ИП</div>
+        <div class="btn" data-val="ООО" onclick="detailSelectOrg('ООО')">🏭 ООО</div>
+        <div class="btn" data-val="Физ.лицо" onclick="detailSelectOrg('Физ.лицо')">👤 Физ.лицо</div>
+    </div>
+
+    <div class="step-title">Организация / ФИО</div>
+    <input type="text" class="input-field" id="detailCompanyName" oninput="onDetailFieldChange()">
+
+    <div class="step-title">Направление</div>
+    <div class="btn-group horizontal" id="detailCategoryButtons">
+        <div class="btn" data-val="Москва" onclick="detailSelectCategory('Москва')">🏙 Москва</div>
+        <div class="btn" data-val="Регионы" onclick="detailSelectCategory('Регионы')">🌍 Регионы</div>
+    </div>
+    <div class="step-title" style="margin-top:8px;">Склад</div>
+    <div class="btn-group horizontal" id="detailWarehouseButtons"></div>
+
+    <div class="step-title">Дата поставки</div>
+    <input type="date" class="input-field" id="detailDate" oninput="onDetailFieldChange()">
+
+    <div class="step-title">Требуется забор?</div>
+    <div class="btn-group horizontal" id="detailPickupButtons">
+        <div class="btn" data-val="1" onclick="detailSelectPickup(true)">✅ Да</div>
+        <div class="btn" data-val="0" onclick="detailSelectPickup(false)">❌ Нет</div>
+    </div>
+
+    <div class="step-title">Что везём?</div>
+    <div class="btn-group horizontal" id="detailCargoButtons">
+        <div class="btn" data-val="Коробки" onclick="detailSelectCargo('Коробки')">📦 Коробки</div>
+        <div class="btn" data-val="Паллеты" onclick="detailSelectCargo('Паллеты')">🟫 Паллеты</div>
+    </div>
+
+    <div class="step-title">Объём</div>
+    <input type="number" class="input-field" id="detailVolume" min="1" oninput="onDetailFieldChange()">
+
+    <div class="step-title">Контактный телефон</div>
+    <input type="tel" class="input-field" id="detailPhone" maxlength="18" oninput="onDetailPhoneInput()">
+
+    <div class="price-block">
+        <div class="price-label">Стоимость</div>
+        <div class="price-value" id="detailPriceValue">—</div>
+    </div>
+
+    <p id="detailStatusLine" style="margin-bottom:12px; font-size:14px;"></p>
+
+    <div class="nav-buttons">
+        <button class="nav-btn back" onclick="showScreen('myList')">← К списку</button>
+        <button class="nav-btn next" id="detailSaveBtn" onclick="saveDetailEdit()">💾 Сохранить</button>
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-btn" id="detailCancelBtn" style="background:#e74c3c; color:#fff; width:100%;" onclick="cancelDetailRequest()">🚫 Отменить заявку</button>
+    </div>
+</div>
 
 <script>
     const tg = window.Telegram?.WebApp;
@@ -311,6 +417,23 @@
     };
     const MAX_BOXES_PER_PALLET = 16;
     const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+
+    // Адрес трекера (server.py). Пока тестируем через ngrok — при каждом
+    // перезапуске ngrok меняется, нужно обновлять здесь. После переезда на
+    // постоянный хостинг — заменить один раз на постоянный домен.
+    const API_BASE = "https://unsecured-crawling-craziness.ngrok-free.dev";
+
+    // Держим в синхроне со STATUSES в db.py вручную (как и WAREHOUSES/PRICES выше).
+    const STATUS_INFO = {
+        new:         { emoji: "🟡", label: "Новая",              color: "#f1c40f" },
+        in_progress: { emoji: "🔵", label: "В работе",           color: "#2980b9" },
+        warehouse:   { emoji: "📦", label: "На складе",          color: "#8e44ad" },
+        transit:     { emoji: "🚚", label: "В пути",             color: "#e67e22" },
+        delivered:   { emoji: "🟢", label: "Доставлено",         color: "#27ae60" },
+        issue:       { emoji: "⚠️", label: "Проблема / возврат", color: "#c0392b" },
+        rejected:    { emoji: "🔴", label: "Отклонена",          color: "#e74c3c" },
+        cancelled:   { emoji: "🚫", label: "Отменена клиентом",  color: "#7f8c8d" },
+    };
 
     let formData = {
         org_type: "", company_name: "", direction_category: "", warehouse: "", direction: "",
@@ -522,14 +645,17 @@
         }
     }
 
-    function calculatePrice() {
+    function calculatePrice(data = formData) {
         // По регламенту WB поставка из более чем 10 коробок должна быть
         // сформирована на паллете — считаем по тарифу на паллеты,
-        // синхронизировано с calculate_price() в bot.py.
-        const wh = formData.warehouse;
-        const cargo = formData.cargo_type;
-        const vol = formData.volume;
-        const pickup = formData.pickup === "Да" ? "yes" : "no";
+        // синхронизировано с calculate_price() в pricing.py.
+        // data.pickup может быть текстом "Да"/"Нет" (форма создания) или
+        // булевым значением (форма редактирования в личном кабинете).
+        const wh = data.warehouse;
+        const cargo = data.cargo_type;
+        const vol = data.volume;
+        const pickupBool = typeof data.pickup === "boolean" ? data.pickup : (data.pickup === "Да");
+        const pickup = pickupBool ? "yes" : "no";
         if (!PRICES[wh]) return "По запросу";
         if (cargo === "Коробки" && vol > 10) {
             if (!PRICES[wh]["Паллеты"]) return "По запросу";
@@ -594,6 +720,271 @@
         }
     }
 
+    // ================= ЛИЧНЫЙ КАБИНЕТ («Мои заявки») =================
+    let myRequests = [];
+    let detailData = null;   // сырые данные заявки, полученные с сервера
+    let detailForm = {};     // редактируемые поля текущей заявки
+    let detailCanModify = false;
+
+    function showScreen(name) {
+        ['home', 'wizard', 'myList', 'detail'].forEach(id => {
+            document.getElementById(id + 'Screen').style.display = (id === name) ? 'block' : 'none';
+        });
+        window.scrollTo(0, 0);
+    }
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function formatIsoDate(iso) {
+        if (!iso) return '—';
+        const [y, m, d] = iso.split('-');
+        return `${d}.${m}.${y}`;
+    }
+
+    async function apiFetch(path, options = {}) {
+        const headers = { 'X-Telegram-Init-Data': tg ? tg.initData : '' };
+        if (options.body) headers['Content-Type'] = 'application/json';
+        const res = await fetch(API_BASE + path, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+        if (!res.ok) {
+            let detail = `Ошибка ${res.status}`;
+            try { const data = await res.json(); if (data.detail) detail = data.detail; } catch (e) {}
+            throw new Error(detail);
+        }
+        return res.json();
+    }
+
+    async function loadMyRequests() {
+        const content = document.getElementById('myListContent');
+        if (!tg || !tg.initData) {
+            content.innerHTML = '<p class="hint-text">Личный кабинет доступен только внутри Telegram.</p>';
+            return;
+        }
+        content.innerHTML = '<p class="hint-text">Загрузка…</p>';
+        try {
+            myRequests = await apiFetch('/api/client/requests');
+        } catch (e) {
+            content.innerHTML = `<p class="hint-text" style="color:#e74c3c;">Не удалось загрузить заявки: ${escapeHtml(e.message)}</p>`;
+            return;
+        }
+        if (!myRequests.length) {
+            content.innerHTML = '<p class="hint-text">У вас пока нет заявок.</p>';
+            return;
+        }
+        content.innerHTML = myRequests.map(r => {
+            const info = STATUS_INFO[r.status] || { emoji: '⚪', label: r.status, color: '#999' };
+            return `
+                <div class="ship-card" onclick="openDetail(${r.id})">
+                    <div class="ship-card-top">
+                        <b>№${r.id}</b>
+                        <span class="status-pill" style="background:${info.color};">${info.emoji} ${escapeHtml(info.label)}</span>
+                    </div>
+                    <div class="ship-card-row">${escapeHtml(r.direction_category || '')} — ${escapeHtml(r.warehouse || '')}</div>
+                    <div class="ship-card-row">📅 ${formatIsoDate(r.delivery_date)} · 📦 ${r.volume ?? '—'} ${escapeHtml(r.cargo_type || '')}</div>
+                    <div class="ship-card-row"><b>${escapeHtml(r.price_display || '—')}</b></div>
+                </div>`;
+        }).join('');
+    }
+
+    async function openDetail(id) {
+        showScreen('detail');
+        document.getElementById('detailId').textContent = id;
+        document.getElementById('detailBanner').style.display = 'none';
+        try {
+            detailData = await apiFetch(`/api/client/requests/${id}`);
+        } catch (e) {
+            alert('Не удалось загрузить заявку: ' + e.message);
+            showScreen('myList');
+            return;
+        }
+        detailForm = {
+            org_type: detailData.org_type,
+            company_name: detailData.company_name,
+            direction_category: detailData.direction_category,
+            warehouse: detailData.warehouse,
+            delivery_date: detailData.delivery_date,
+            pickup: !!detailData.pickup,
+            cargo_type: detailData.cargo_type,
+            volume: detailData.volume,
+            phone: detailData.phone,
+        };
+        detailCanModify = !!detailData.can_modify;
+        renderDetailForm();
+    }
+
+    function renderDetailForm() {
+        document.getElementById('detailCompanyName').value = detailForm.company_name || '';
+        const dateInput = document.getElementById('detailDate');
+        dateInput.value = detailForm.delivery_date || '';
+        dateInput.min = new Date().toISOString().slice(0, 10);
+        document.getElementById('detailVolume').value = detailForm.volume || '';
+        document.getElementById('detailPhone').value = detailForm.phone ? formatPhoneMask(detailForm.phone.replace(/\D/g, '').slice(1)) : '';
+
+        highlightSelected('detailOrgButtons', detailForm.org_type);
+        highlightSelected('detailCategoryButtons', detailForm.direction_category);
+        renderDetailWarehouses();
+        highlightSelected('detailPickupButtons', detailForm.pickup ? '1' : '0');
+        highlightSelected('detailCargoButtons', detailForm.cargo_type);
+
+        const info = STATUS_INFO[detailData.status] || { emoji: '⚪', label: detailData.status };
+        document.getElementById('detailStatusLine').innerHTML = `Статус: <b>${info.emoji} ${escapeHtml(info.label)}</b>`;
+
+        const banner = document.getElementById('detailBanner');
+        const saveBtn = document.getElementById('detailSaveBtn');
+        const cancelBtn = document.getElementById('detailCancelBtn');
+        if (!detailCanModify) {
+            banner.style.display = 'block';
+            banner.textContent = '⛔ ' + (detailData.cannot_modify_reason || 'Изменение недоступно.');
+            saveBtn.disabled = true;
+            cancelBtn.disabled = true;
+        } else {
+            banner.style.display = 'none';
+            saveBtn.disabled = false;
+            cancelBtn.disabled = false;
+        }
+        setDetailFormDisabled(!detailCanModify);
+        updateDetailPrice();
+    }
+
+    function setDetailFormDisabled(disabled) {
+        ['detailCompanyName', 'detailDate', 'detailVolume', 'detailPhone'].forEach(id => {
+            document.getElementById(id).disabled = disabled;
+        });
+        document.querySelectorAll(
+            '#detailOrgButtons .btn, #detailCategoryButtons .btn, #detailWarehouseButtons .btn, ' +
+            '#detailPickupButtons .btn, #detailCargoButtons .btn'
+        ).forEach(b => { b.style.pointerEvents = disabled ? 'none' : 'auto'; b.style.opacity = disabled ? '0.5' : '1'; });
+    }
+
+    function highlightSelected(containerId, val) {
+        document.querySelectorAll(`#${containerId} .btn`).forEach(b => {
+            b.classList.toggle('selected', b.dataset.val === String(val));
+        });
+    }
+
+    function renderDetailWarehouses() {
+        const container = document.getElementById('detailWarehouseButtons');
+        container.innerHTML = '';
+        const list = WAREHOUSES[detailForm.direction_category] || [];
+        list.forEach(wh => {
+            const div = document.createElement('div');
+            div.className = 'btn btn-warehouse';
+            div.textContent = wh;
+            div.dataset.val = wh;
+            if (wh === detailForm.warehouse) div.classList.add('selected');
+            div.onclick = () => {
+                if (!detailCanModify) return;
+                detailForm.warehouse = wh;
+                renderDetailWarehouses();
+                updateDetailPrice();
+            };
+            container.appendChild(div);
+        });
+    }
+
+    function detailSelectOrg(val) {
+        if (!detailCanModify) return;
+        detailForm.org_type = val;
+        highlightSelected('detailOrgButtons', val);
+    }
+
+    function detailSelectCategory(val) {
+        if (!detailCanModify) return;
+        detailForm.direction_category = val;
+        detailForm.warehouse = '';
+        highlightSelected('detailCategoryButtons', val);
+        renderDetailWarehouses();
+        updateDetailPrice();
+    }
+
+    function detailSelectPickup(val) {
+        if (!detailCanModify) return;
+        detailForm.pickup = val;
+        highlightSelected('detailPickupButtons', val ? '1' : '0');
+        updateDetailPrice();
+    }
+
+    function detailSelectCargo(val) {
+        if (!detailCanModify) return;
+        detailForm.cargo_type = val;
+        highlightSelected('detailCargoButtons', val);
+        updateDetailPrice();
+    }
+
+    function onDetailFieldChange() {
+        detailForm.company_name = document.getElementById('detailCompanyName').value.trim();
+        detailForm.delivery_date = document.getElementById('detailDate').value;
+        const vol = parseInt(document.getElementById('detailVolume').value);
+        detailForm.volume = isNaN(vol) ? 0 : vol;
+        updateDetailPrice();
+    }
+
+    function onDetailPhoneInput() {
+        const inputEl = document.getElementById('detailPhone');
+        let raw = inputEl.value.replace(/\D/g, '');
+        if (raw.startsWith('7') || raw.startsWith('8')) raw = raw.slice(1);
+        raw = raw.substring(0, 10);
+        inputEl.value = formatPhoneMask(raw);
+        detailForm.phone = raw.length === 10 ? `+7${raw}` : '';
+    }
+
+    function updateDetailPrice() {
+        document.getElementById('detailPriceValue').textContent = calculatePrice(detailForm);
+    }
+
+    async function saveDetailEdit() {
+        if (!detailCanModify) return;
+        if (!detailForm.company_name || !detailForm.warehouse || !detailForm.delivery_date ||
+            !detailForm.cargo_type || !detailForm.volume || !detailForm.phone) {
+            alert('Заполните все поля перед сохранением.');
+            return;
+        }
+        try {
+            detailData = await apiFetch(`/api/client/requests/${detailData.id}/edit`, {
+                method: 'POST',
+                body: JSON.stringify(detailForm),
+            });
+        } catch (e) {
+            alert('Не удалось сохранить изменения: ' + e.message);
+            return;
+        }
+        if (tg) {
+            tg.showPopup({ title: 'Готово', message: 'Заявка обновлена.', buttons: [{ id: 'ok', type: 'default', text: 'OK' }] });
+        } else {
+            alert('Заявка обновлена.');
+        }
+        showScreen('myList');
+        loadMyRequests();
+    }
+
+    function cancelDetailRequest() {
+        if (!detailCanModify) return;
+        const doCancel = async () => {
+            try {
+                await apiFetch(`/api/client/requests/${detailData.id}/cancel`, { method: 'POST', body: '{}' });
+            } catch (e) {
+                alert('Не удалось отменить заявку: ' + e.message);
+                return;
+            }
+            showScreen('myList');
+            loadMyRequests();
+        };
+        if (tg) {
+            tg.showPopup({
+                title: 'Отмена заявки',
+                message: `Точно отменить заявку №${detailData.id}? Это действие нельзя отменить обратно.`,
+                buttons: [
+                    { id: 'yes', type: 'destructive', text: 'Да, отменить' },
+                    { id: 'no', type: 'cancel', text: 'Не отменять' },
+                ],
+            }, (btnId) => { if (btnId === 'yes') doCancel(); });
+        } else if (confirm(`Точно отменить заявку №${detailData.id}?`)) {
+            doCancel();
+        }
+    }
+
+    showScreen('home');
     updateProgress();
 </script>
 

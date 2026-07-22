@@ -323,9 +323,10 @@
         <div class="price-label">Стоимость</div>
         <div class="price-value" id="priceValue">—</div>
     </div>
+    <p id="submitStatus" class="hint-text" style="display:none;"></p>
     <div class="nav-buttons">
         <button class="nav-btn back" onclick="goToStep(7)">← Назад</button>
-        <button class="nav-btn next" onclick="submitForm()" style="background:#27ae60;">✅ Отправить заявку</button>
+        <button class="nav-btn next" id="submitBtn" onclick="submitForm()" style="background:#27ae60;">✅ Отправить заявку</button>
     </div>
 </div>
 </div><!-- /wizardScreen -->
@@ -697,7 +698,22 @@
     // теперь открывается через Menu Button (нужно для личного кабинета —
     // initData), а там sendData() недоступен (см. bot.py). Поэтому заявка
     // теперь создаётся напрямую через API трекера, как и редактирование/отмена.
+    //
+    // Статус выводим прямо в текст на странице (submitStatus), а не через
+    // tg.showPopup() — на некоторых версиях Telegram Desktop showPopup не
+    // вызывает callback с ответом пользователя, и весь сценарий "зависает"
+    // без единого сообщения об ошибке.
+    function setSubmitStatus(text, isError) {
+        const el = document.getElementById('submitStatus');
+        el.style.display = text ? 'block' : 'none';
+        el.textContent = text || '';
+        el.style.color = isError ? '#e74c3c' : 'var(--tg-theme-hint-color)';
+    }
+
     async function submitRequestViaApi() {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        setSubmitStatus('Отправляем заявку…', false);
         try {
             await apiFetch('/api/client/requests', {
                 method: 'POST',
@@ -714,24 +730,13 @@
                 }),
             });
         } catch (e) {
-            if (tg) {
-                tg.showPopup({ title: "Ошибка", message: "Не удалось отправить заявку: " + e.message, buttons: [{ id: "ok", type: "default", text: "OK" }] });
-            } else {
-                alert("Не удалось отправить заявку: " + e.message);
-            }
+            btn.disabled = false;
+            setSubmitStatus('❌ Не удалось отправить заявку: ' + e.message, true);
             return;
         }
 
-        if (tg) {
-            tg.showPopup({
-                title: "✅ Успешно!",
-                message: "Ваша заявка отправлена. Менеджер свяжется с вами в ближайшее время.",
-                buttons: [{ id: "ok", type: "default", text: "OK" }]
-            });
-            setTimeout(() => { tg.close(); }, 1500);
-        } else {
-            alert("Заявка отправлена.");
-        }
+        setSubmitStatus('✅ Заявка отправлена! Менеджер свяжется с вами в ближайшее время. Закрываем приложение…', false);
+        setTimeout(() => { if (tg) tg.close(); }, 2000);
     }
 
     function submitForm() {
@@ -740,23 +745,11 @@
             return;
         }
         if (!tg.initData) {
-            tg.showPopup({
-                title: "Недоступно",
-                message: "Откройте приложение через кнопку 📱 рядом с полем ввода сообщения — оттуда отправка заявок работает.",
-                buttons: [{ id: "ok", type: "default", text: "OK" }],
-            });
+            setSubmitStatus('⛔ Откройте приложение через кнопку 📱 рядом с полем ввода сообщения — оттуда отправка заявок работает.', true);
             return;
         }
-        tg.showPopup({
-            title: "Отправка заявки",
-            message: "Вы уверены, что хотите отправить заявку?",
-            buttons: [
-                { id: "confirm", type: "default", text: "✅ Да, отправить" },
-                { id: "cancel", type: "cancel", text: "Отмена" }
-            ]
-        }, (btn) => {
-            if (btn === "confirm") submitRequestViaApi();
-        });
+        if (!confirm('Отправить заявку?')) return;
+        submitRequestViaApi();
     }
 
     // ================= ЛИЧНЫЙ КАБИНЕТ («Мои заявки») =================
@@ -998,39 +991,25 @@
             alert('Не удалось сохранить изменения: ' + e.message);
             return;
         }
-        if (tg) {
-            tg.showPopup({ title: 'Готово', message: 'Заявка обновлена.', buttons: [{ id: 'ok', type: 'default', text: 'OK' }] });
-        } else {
-            alert('Заявка обновлена.');
-        }
+        alert('Заявка обновлена.');
         showScreen('myList');
         loadMyRequests();
     }
 
-    function cancelDetailRequest() {
+    // Используем обычный confirm()/alert(), а не tg.showPopup() — на некоторых
+    // версиях Telegram Desktop showPopup не вызывает callback с ответом
+    // пользователя, и сценарий "зависает" без единого сообщения об ошибке.
+    async function cancelDetailRequest() {
         if (!detailCanModify) return;
-        const doCancel = async () => {
-            try {
-                await apiFetch(`/api/client/requests/${detailData.id}/cancel`, { method: 'POST', body: '{}' });
-            } catch (e) {
-                alert('Не удалось отменить заявку: ' + e.message);
-                return;
-            }
-            showScreen('myList');
-            loadMyRequests();
-        };
-        if (tg) {
-            tg.showPopup({
-                title: 'Отмена заявки',
-                message: `Точно отменить заявку №${detailData.id}? Это действие нельзя отменить обратно.`,
-                buttons: [
-                    { id: 'yes', type: 'destructive', text: 'Да, отменить' },
-                    { id: 'no', type: 'cancel', text: 'Не отменять' },
-                ],
-            }, (btnId) => { if (btnId === 'yes') doCancel(); });
-        } else if (confirm(`Точно отменить заявку №${detailData.id}?`)) {
-            doCancel();
+        if (!confirm(`Точно отменить заявку №${detailData.id}? Это действие нельзя отменить обратно.`)) return;
+        try {
+            await apiFetch(`/api/client/requests/${detailData.id}/cancel`, { method: 'POST', body: '{}' });
+        } catch (e) {
+            alert('Не удалось отменить заявку: ' + e.message);
+            return;
         }
+        showScreen('myList');
+        loadMyRequests();
     }
 
     showScreen('home');

@@ -687,37 +687,76 @@
     }
 
     // 🆕 ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ
-    function submitForm() {
-        if (tg) {
-            // 1. Показываем попап подтверждения
-            tg.showPopup({
-                title: "Отправка заявки",
-                message: "Вы уверены, что хотите отправить заявку?",
-                buttons: [
-                    {id: "confirm", type: "default", text: "✅ Да, отправить"},
-                    {id: "cancel", type: "cancel", text: "Отмена"}
-                ]
-            }, async (btn) => {
-                if (btn === "confirm") {
-                    // 2. Отправляем данные
-                    tg.sendData(JSON.stringify(formData));
-                    
-                    // 3. Показываем уведомление об успехе
-                    tg.showPopup({
-                        title: "✅ Успешно!",
-                        message: "Ваша заявка отправлена. Менеджер свяжется с вами в ближайшее время.",
-                        buttons: [{id: "ok", type: "default", text: "OK"}]
-                    });
-                    
-                    // 4. Закрываем приложение С ЗАДЕРЖКОЙ (чтобы данные успели дойти)
-                    setTimeout(() => {
-                        tg.close();
-                    }, 1500);
-                }
+    function ddmmyyyyToIso(s) {
+        const [d, m, y] = s.split('.');
+        return `${y}-${m}-${d}`;
+    }
+
+    // 🆕 Раньше заявка уходила через tg.sendData() — это работает ТОЛЬКО для
+    // Mini App, открытого через кнопку обычной Reply-клавиатуры. Приложение
+    // теперь открывается через Menu Button (нужно для личного кабинета —
+    // initData), а там sendData() недоступен (см. bot.py). Поэтому заявка
+    // теперь создаётся напрямую через API трекера, как и редактирование/отмена.
+    async function submitRequestViaApi() {
+        try {
+            await apiFetch('/api/client/requests', {
+                method: 'POST',
+                body: JSON.stringify({
+                    org_type: formData.org_type,
+                    company_name: formData.company_name,
+                    direction_category: formData.direction_category,
+                    warehouse: formData.warehouse,
+                    delivery_date: ddmmyyyyToIso(formData.delivery_date),
+                    pickup: formData.pickup === "Да",
+                    cargo_type: formData.cargo_type,
+                    volume: formData.volume,
+                    phone: formData.phone,
+                }),
             });
-        } else {
-            alert("Данные для отправки:\n" + JSON.stringify(formData, null, 2));
+        } catch (e) {
+            if (tg) {
+                tg.showPopup({ title: "Ошибка", message: "Не удалось отправить заявку: " + e.message, buttons: [{ id: "ok", type: "default", text: "OK" }] });
+            } else {
+                alert("Не удалось отправить заявку: " + e.message);
+            }
+            return;
         }
+
+        if (tg) {
+            tg.showPopup({
+                title: "✅ Успешно!",
+                message: "Ваша заявка отправлена. Менеджер свяжется с вами в ближайшее время.",
+                buttons: [{ id: "ok", type: "default", text: "OK" }]
+            });
+            setTimeout(() => { tg.close(); }, 1500);
+        } else {
+            alert("Заявка отправлена.");
+        }
+    }
+
+    function submitForm() {
+        if (!tg) {
+            alert("Данные для отправки:\n" + JSON.stringify(formData, null, 2));
+            return;
+        }
+        if (!tg.initData) {
+            tg.showPopup({
+                title: "Недоступно",
+                message: "Откройте приложение через кнопку 📱 рядом с полем ввода сообщения — оттуда отправка заявок работает.",
+                buttons: [{ id: "ok", type: "default", text: "OK" }],
+            });
+            return;
+        }
+        tg.showPopup({
+            title: "Отправка заявки",
+            message: "Вы уверены, что хотите отправить заявку?",
+            buttons: [
+                { id: "confirm", type: "default", text: "✅ Да, отправить" },
+                { id: "cancel", type: "cancel", text: "Отмена" }
+            ]
+        }, (btn) => {
+            if (btn === "confirm") submitRequestViaApi();
+        });
     }
 
     // ================= ЛИЧНЫЙ КАБИНЕТ («Мои заявки») =================

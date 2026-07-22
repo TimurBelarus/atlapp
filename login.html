@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Вход — Трекер поставок</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2B4C3F">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2F3EF; --surface:#FFFFFF; --ink:#141A17; --ink-soft:#5B6660; --line:#D9DCD3;
+    --accent:#2B4C3F; --accent-soft:#E4ECE7; --radius:14px; --err:#C6423F; --err-bg:#FBE6E5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .wrap{width:100%;max-width:360px;}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:26px;text-align:center;}
+  .brand-mark{width:52px;height:52px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;}
+  .brand-mark svg{width:28px;height:28px;}
+  h1{font-family:'Oswald',sans-serif;letter-spacing:.02em;text-transform:uppercase;font-size:19px;margin:0;}
+  .brand p{margin:2px 0 0;font-size:13px;color:var(--ink-soft);}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;}
+  label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.03em;}
+  label:first-child{margin-top:0;}
+  input[type=text],input[type=password]{
+    width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:9px;
+    font-family:'IBM Plex Sans',sans-serif;font-size:15px;background:#FBFBFA;color:var(--ink);
+  }
+  input:focus{outline:none;border-color:var(--accent);background:#fff;}
+
+  .btn-primary{
+    width:100%;margin-top:20px;padding:13px 18px;border-radius:9px;border:none;cursor:pointer;
+    background:var(--accent);color:#fff;font-family:'Oswald',sans-serif;font-size:15px;
+    letter-spacing:.03em;text-transform:uppercase;transition:opacity .15s ease;
+  }
+  .btn-primary:disabled{opacity:.5;cursor:default;}
+  .btn-primary:not(:disabled):active{transform:scale(0.98);}
+
+  .error-box{
+    display:none;background:var(--err-bg);color:var(--err);border-radius:9px;padding:10px 13px;
+    font-size:13.5px;margin-top:14px;
+  }
+  .error-box.show{display:block;}
+
+  .hint{text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 7l9-4 9 4-9 4-9-4z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 7v10l9 4 9-4V7" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 11v10" stroke="#fff" stroke-width="1.6"/></svg>
+    </div>
+    <div>
+      <h1>Трекинг поставок</h1>
+      <p>Вход только для сотрудников</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <label for="f-username">Логин</label>
+    <input type="text" id="f-username" autocomplete="username" autocapitalize="off" autocorrect="off">
+
+    <label for="f-password">Пароль</label>
+    <input type="password" id="f-password" autocomplete="current-password">
+
+    <button class="btn-primary" id="btn-login">Войти</button>
+    <div class="error-box" id="error-box"></div>
+  </div>
+
+  <div class="hint">Доступ выдаёт руководитель склада. Если у вас нет логина — обратитесь к нему.</div>
+</div>
+
+<script>
+const usernameInput = document.getElementById('f-username');
+const passwordInput = document.getElementById('f-password');
+const btn = document.getElementById('btn-login');
+const errorBox = document.getElementById('error-box');
+
+function showError(msg){
+  errorBox.textContent = msg;
+  errorBox.classList.add('show');
+}
+
+async function doLogin(){
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+  if(!username || !password){
+    showError('Введите логин и пароль');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Входим…';
+  errorBox.classList.remove('show');
+
+  try{
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password}),
+    });
+    if(res.ok){
+      window.location.href = '/';
+      return;
+    }
+    const data = await res.json().catch(() => ({}));
+    showError(data.detail || 'Неверный логин или пароль');
+  }catch(e){
+    showError('Не удалось связаться с сервером');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  }
+}
+
+btn.addEventListener('click', doLogin);
+passwordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') doLogin(); });
+usernameInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') passwordInput.focus(); });
+usernameInput.focus();
+</script>
+</body>
+</html>
